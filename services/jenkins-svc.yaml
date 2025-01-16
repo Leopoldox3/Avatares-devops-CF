@@ -1,0 +1,13 @@
+# Servicio de Jenkins para exponer la interfaz web
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+spec:
+  selector:
+    app: jenkins # Aseguramos que el servicio apunte al pod de Jenkins
+  ports:
+    - protocol: TCP
+      port: 8080 # Puerto expuesto para acceder a la interfaz de Jenkins
+      targetPort: 8080 # Puerto en el pod donde Jenkins escucha
+  type: LoadBalancer # Usamos LoadBalancer para que el servicio sea accesible externamente

@@ -1,0 +1,55 @@
+# Deployment de Jenkins
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  labels:
+    app: jenkins
+spec:
+  replicas: 1 # Número de réplicas de Jenkins (puedes cambiarlo si deseas alta disponibilidad)
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+        - name: jenkins
+          image: jenkins/jenkins:lts # Usamos la imagen oficial de Jenkins LTS
+          ports:
+            - containerPort: 8080 # Puerto en el que Jenkins escucha
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+          volumeMounts:
+            - mountPath: /var/jenkins_home # Directorio donde Jenkins almacenará sus datos
+              name: jenkins-home # Volumen persistente para Jenkins
+            - mountPath: /var/run/docker.sock # Montamos el socket de Docker para que Jenkins pueda usar Docker
+              name: docker-socket # Volumen para Docker
+      volumes:
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: jenkins-pvc # Referencia al PersistentVolumeClaim que almacenará los datos
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock # Referencia al socket de Docker en el nodo host
+
+---
+# PersistentVolumeClaim para almacenar los datos de Jenkins de manera persistente
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-pvc # Nombre del PVC que usará Jenkins para almacenar datos
+spec:
+  accessModes:
+    - ReadWriteOnce # Solo un pod puede montar este PVC a la vez
+  resources:
+    requests:
+      storage: 10Gi # Espacio solicitado para el almacenamiento de Jenkins
+
